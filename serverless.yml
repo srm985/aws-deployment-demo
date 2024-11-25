@@ -1,0 +1,62 @@
+service: aws-deployment-demo
+
+package:
+  individually: true
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  stage: ${opt:stage, 'local'}
+  timeout: 30
+
+  environment:
+    ALLOWED_ORIGINS: ${ssm:/${self:provider.stage}/${self:service}/ALLOWED_ORIGINS}
+    NODE_ENV: ${ssm:/${self:provider.stage}/${self:service}/NODE_ENV}
+
+plugins:
+  - serverless-offline-ssm
+  - serverless-offline
+  - serverless-prune-plugin
+
+custom:
+  serverless-offline:
+    httpPort: 3100
+    lambdaPort: 4100
+    reloadHandler: true
+  serverless-offline-ssm:
+    stages:
+      - local
+  prune:
+    automatic: true
+    number: 3
+
+functions:
+  hello-world:
+    handler: hello-world.default
+    description: Returns a simple status message
+    events:
+      - http:
+          path: hello-world
+          private: true
+          method: GET
+          cors:
+            origin: ${self:provider.environment.ALLOWED_ORIGINS}
+
+  list-roles:
+    handler: models.default
+    description: Returns all models given a manufacturer
+    environment:
+      DATABASE_HOST_ADDRESS: ${ssm:/${self:provider.stage}/${self:service}/DATABASE_HOST_ADDRESS}
+      DATABASE_NAME: ${ssm:/${self:provider.stage}/${self:service}/DATABASE_NAME}
+      DATABASE_PASSWORD: ${ssm:/${self:provider.stage}/${self:service}/DATABASE_PASSWORD}
+      DATABASE_PORT: ${ssm:/${self:provider.stage}/${self:service}/DATABASE_PORT}
+      DATABASE_USER: ${ssm:/${self:provider.stage}/${self:service}/DATABASE_USER}
+      TABLE_NAME_ROLES: ${ssm:/${self:provider.stage}/${self:service}/TABLE_NAME_ROLES}
+    events:
+      - http:
+          path: cars/{make}/models
+          method: GET
+          cors:
+            origin: ${self:provider.environment.ALLOWED_ORIGINS}
+            allowCredentials: true

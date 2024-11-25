@@ -1,0 +1,30 @@
+{
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "Asuka.insertnumbers",
+                "dbaeumer.vscode-eslint",
+                "deerawan.vscode-faker",
+                "eamodio.gitlens",
+                "ecmel.vscode-html-css",
+                "mikestead.dotenv",
+                "mrmlnc.vscode-scss",
+                "streetsidesoftware.code-spell-checker",
+                "stylelint.vscode-stylelint",
+                "Tyriar.lorem-ipsum",
+                "Tyriar.sort-lines",
+                "zengxingxin.sort-js-object-keys",
+                "Zignd.html-css-class-completion"
+            ]
+        }
+    },
+    "forwardPorts": [
+        3100,
+        3306,
+        8080
+    ],
+    "image": "mcr.microsoft.com/devcontainers/base:bullseye",
+    "name": "Debian",
+    "postCreateCommand": "bash -i ./scripts/post-create-command.sh",
+    "postStartCommand": "nohup bash -i ./scripts/post-start-command.sh"
+}

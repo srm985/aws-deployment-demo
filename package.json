@@ -1,0 +1,19 @@
+{
+  "name": "aws-deployment-demo",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "serverless": "^3.39.0",
+    "serverless-offline": "^14.3.4",
+    "serverless-offline-ssm": "^6.2.0",
+    "serverless-prune-plugin": "^2.1.0"
+  }
+}
