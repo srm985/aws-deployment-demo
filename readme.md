@@ -30,38 +30,31 @@ It is not recommended to run this project outside of a Dev Container due to mach
 
 ## Installation
 
-### Cloning into a VSCode Dev Container
+* Docker Desktop: https://www.docker.com/products/docker-desktop/
 
-To set up the project inside a VSCode Dev Container, follow these steps:
+* Git: https://git-scm.com/downloads
 
-1. **Clone the Repository**:
-   ```bash
-   git clone <repository-url>
-   cd aws-deployment-demo
-   ```
+* VSCode: https://code.visualstudio.com/download
 
-2. **Open the Project in VSCode**:
-   - Open Visual Studio Code.
-   - In the VSCode terminal, run the following to open the project folder:
-     ```bash
-     code .
-     ```
+* VSCode Dev Containers: https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers
 
-3. **VSCode Dev Container Setup**:
-   - Ensure you have the **Remote - Containers** extension installed in VSCode.
-   - When you open the repository in VSCode, you should see a prompt asking you if you want to reopen the folder in a Dev Container. Click **Reopen in Container**.
-   - VSCode will now build and open the project inside a development container. The container includes a pre-configured environment with Node.js and other necessary dependencies installed.
+><b>ⓘ</b>&nbsp;&nbsp;
+>NodeJS is not technically required for this project because it will be installed within the Dev Container so that the version is always correctly maintained for the project
 
-4. **Install Project Dependencies**:
-   Inside the VSCode terminal (within the dev container), install the required npm dependencies:
-   ```bash
-   npm install
-   ```
+><b>⚠</b>&nbsp;&nbsp;
+>Due to the current functionality of VSCode Dev Containers, do not directly clone this repository as you normally would. Doing so will result in sluggish performance due to sharing data across file systems. Instead, follow the steps below:
 
+1. Ensure Docker is up and running
 
-### Configuration
+2. Open the command palette within any instance of VSCode: `⌘/Ctrl + ⇧/Shift + P` → <i>Dev Containers: Clone Repository in Container Volume</i>
 
-If set up inside a Dev Container, no configuration should be required.
+3. Paste in `https://github.com/srm985/aws-deployment-demo.git`
+
+4. The project will open in a new VSCode window. Opening the first time may take some time as the project is provisioning the Docker volume and workspace.
+
+5. Drop the `.env` file into the root directory of the project. Ensure it's named correctly as sometimes downloading it can drop the leading dot.
+
+6. Get started developing! 🚀 There's no need to even run `npm install` or perform any sort of updates.
 
 
 ## Local Development

@@ -6,8 +6,7 @@
           content="width=device-width, initial-scale=1.0">
     <title>AWS Deployment Demo</title>
     <script>
-        // const BASE_URL=`http://localhost:3100/local`
-        const BASE_URL = `https://q19sgf0tre.execute-api.us-east-1.amazonaws.com/local`
+        const BASE_URL = 'http://localhost:3100/local';
 
         const fetchData = async (url) => {
             try {
@@ -22,7 +21,7 @@
         };
         const checkIsAlive = async () => {
             const {
-                isAlive = false
+                isAlive = false,
             } = await fetchData(`${BASE_URL}/alive`);
 
             const statusElement = document.getElementById('status');
@@ -38,7 +37,7 @@
             const make = searchInput.value;
 
             const {
-                modelsList = []
+                modelsList = [],
             } = await fetchData(`${BASE_URL}/cars/${make}/models`);
 
             const listElement = document.getElementById('list');
@@ -53,7 +52,6 @@
         };
 
         document.addEventListener('load', checkIsAlive());
-
     </script>
 </head>
 
