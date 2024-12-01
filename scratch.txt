@@ -1,0 +1,22 @@
+CREATE TABLE `cars` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `make` varchar(255) NOT NULL,
+  `model` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `model` (`model`)
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `cars` VALUES (1,'BMW','3 Series'),(2,'BMW','5 Series'),(3,'BMW','X5'),(4,'Mercedes-Benz','A-Class'),(5,'Mercedes-Benz','C-Class'),(6,'Mercedes-Benz','E-Class'),(7,'Mercedes-Benz','GLA'),(8,'Audi','A3'),(9,'Audi','A4'),(10,'Audi','Q5'),(11,'Audi','Q7'),(12,'Volkswagen','Golf'),(13,'Volkswagen','Polo'),(14,'Volkswagen','Passat'),(15,'Volkswagen','Tiguan'),(16,'Volkswagen','Touareg'),(17,'Ferrari','488 GTB'),(18,'Ferrari','Portofino'),(19,'Ferrari','SF90'),(20,'Volvo','XC40'),(21,'Volvo','XC60'),(22,'Volvo','S90');
+
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicReadGetObject",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::aws-deployment-demo/*"
+        }
+    ]
+}

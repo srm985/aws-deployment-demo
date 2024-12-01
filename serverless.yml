@@ -1,62 +1,214 @@
+# The name of the service being deployed
 service: aws-deployment-demo
 
+# Configuration for how the service is packaged before deployment
 package:
+  # Packages each function individually, which can improve deployment speed
   individually: true
 
+# Provider configuration
 provider:
+  # Specifies the cloud provider, in this case AWS
   name: aws
+  # Defines the runtime environment for the Lambda functions (Node.js 20.x)
   runtime: nodejs20.x
+  # The AWS region where the resources will be deployed
   region: us-east-1
-  stage: ${opt:stage, 'local'}
+  # The stage for the deployment (can be set via CLI, defaults to 'dev')
+  stage: ${opt:stage, 'dev'}
+  # The maximum time before Lambda functions time out (in seconds)
   timeout: 30
+  # Configuration for the VPC in which Lambda functions will run
+  vpc:
+    # The security group Lambda functions will use
+    securityGroupIds:
+      - Ref: LambdaSecurityGroup
+    # The subnets Lambda functions will run in
+    subnetIds:
+      - Ref: Subnet1
+      - Ref: Subnet2
 
+  # Environment variables that will be injected into the Lambda functions at runtime
   environment:
-    ALLOWED_ORIGINS: ${ssm:/${self:provider.stage}/${self:service}/ALLOWED_ORIGINS}
-    NODE_ENV: ${ssm:/${self:provider.stage}/${self:service}/NODE_ENV}
+    # The Node.js environment (e.g., development, production) pulled from SSM Parameter Store
+    NODE_ENV: ${ssm:/${self:service}/${self:provider.stage}/NODE_ENV}
 
+# List of plugins used by the Serverless Framework
 plugins:
-  - serverless-offline-ssm
-  - serverless-offline
-  - serverless-prune-plugin
+  - serverless-offline-ssm   # For accessing SSM parameters locally during development
+  - serverless-offline       # For simulating AWS Lambda and API Gateway locally
+  - serverless-prune-plugin  # For pruning old Lambda function versions automatically
 
+# Custom settings for the plugins
 custom:
   serverless-offline:
+    # HTTP port for the local API Gateway simulation
     httpPort: 3100
+    # Lambda function invocation port for local simulation
     lambdaPort: 4100
+    # Reloads Lambda handlers when the file changes
     reloadHandler: true
+  # Configuration for the serverless-offline-ssm plugin, used in the local stage
   serverless-offline-ssm:
     stages:
-      - local
+      - dev  # Use the plugin only in the 'local' stage
+  # Configuration for the serverless-prune-plugin
   prune:
+    # Automatically prune old versions of Lambda functions after deployment
     automatic: true
+    # The number of Lambda versions to keep (older versions will be pruned)
     number: 3
 
+# Defines additional AWS resources required for the application
+resources:
+  Resources:
+    # AWS RDS database instance (MySQL)
+    MyDatabase:
+      Type: AWS::RDS::DBInstance
+      Properties:
+        DBInstanceIdentifier: demo  # The unique identifier for the database
+        AllocatedStorage: 20  # Storage size in GB
+        DBInstanceClass: db.t3.micro  # The instance type (small and cost-effective)
+        Engine: MySQL  # The database engine (MySQL)
+        EngineVersion: "8.0"  # MySQL version
+        MasterUsername: admin  # Master username for the database
+        MasterUserPassword: supersecretpw  # Master password for the database
+        PubliclyAccessible: true  # Allow public access (use with caution in production)
+        VPCSecurityGroups:
+          - Ref: LambdaSecurityGroup  # The security group allowing Lambda to access the DB
+        DBSubnetGroupName:
+          Ref: DBSubnetGroup  # The DB subnet group to use
+
+    # RDS subnet group (defines which subnets the database will be in)
+    DBSubnetGroup:
+      Type: AWS::RDS::DBSubnetGroup
+      Properties:
+        DBSubnetGroupDescription: "Subnets for MySQL Database"
+        SubnetIds:
+          - Ref: Subnet1
+          - Ref: Subnet2
+
+    # Defines the first subnet for the VPC
+    Subnet1:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: VPC
+        CidrBlock: "10.0.1.0/24"  # CIDR block for the subnet
+        MapPublicIpOnLaunch: true  # Automatically assign public IPs to instances
+        AvailabilityZone: "us-east-1a"  # Availability zone for the subnet
+
+    # Defines the second subnet for the VPC
+    Subnet2:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId:
+          Ref: VPC
+        CidrBlock: "10.0.2.0/24"  # CIDR block for the subnet
+        MapPublicIpOnLaunch: true  # Automatically assign public IPs to instances
+        AvailabilityZone: "us-east-1b"  # Availability zone for the subnet
+
+    # VPC configuration
+    VPC:
+      Type: AWS::EC2::VPC
+      Properties:
+        CidrBlock: "10.0.0.0/16"  # The IP range for the VPC
+        EnableDnsSupport: true  # Enable DNS resolution in the VPC
+        EnableDnsHostnames: true  # Enable DNS hostnames in the VPC
+
+    # Internet Gateway to allow internet access
+    InternetGateway:
+      Type: AWS::EC2::InternetGateway
+
+    # Attach the Internet Gateway to the VPC
+    VPCGatewayAttachment:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        VpcId:
+          Ref: VPC
+        InternetGatewayId:
+          Ref: InternetGateway
+
+    # Public route table for routing traffic to the internet
+    PublicRouteTable:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:
+          Ref: VPC
+
+    # Default route to send traffic to the internet via the Internet Gateway
+    PublicRoute:
+      Type: AWS::EC2::Route
+      Properties:
+        RouteTableId:
+          Ref: PublicRouteTable
+        DestinationCidrBlock: "0.0.0.0/0"  # All traffic (default route)
+        GatewayId:
+          Ref: InternetGateway
+
+    # Route table associations for Subnet1 and Subnet2
+    Subnet1RouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: Subnet1
+        RouteTableId:
+          Ref: PublicRouteTable
+
+    Subnet2RouteTableAssociation:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: Subnet2
+        RouteTableId:
+          Ref: PublicRouteTable
+
+    # Security group allowing Lambda to access the RDS MySQL database
+    LambdaSecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Allow Lambda access to RDS
+        VpcId:
+          Ref: VPC
+        SecurityGroupIngress:
+          - IpProtocol: tcp  # Allows TCP connections
+            FromPort: 3306  # MySQL port
+            ToPort: 3306  # MySQL port
+            CidrIp: 0.0.0.0/0  # Allow all IPs (be cautious in production)
+
+    # S3 Bucket to store files (e.g., static assets)
+    AWSDeploymentDemo:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: aws-deployment-demo  # Name of the S3 bucket
+
+# Lambda functions definitions
 functions:
-  hello-world:
-    handler: hello-world.default
+  # The 'alive' function checks if the service is running
+  alive:
+    handler: functions/alive.default
     description: Returns a simple status message
     events:
       - http:
-          path: hello-world
-          private: true
-          method: GET
+          path: alive  # The API endpoint path
+          method: GET  # HTTP method
           cors:
-            origin: ${self:provider.environment.ALLOWED_ORIGINS}
+            origin: '*'  # Allows all origins for CORS
 
-  list-roles:
-    handler: models.default
-    description: Returns all models given a manufacturer
+  # The 'get-models' function fetches car models based on make
+  get-models:
+    handler: functions/get-models.default
+    description: Returns all models given a make
+    # Environment variables for connecting to the database
     environment:
-      DATABASE_HOST_ADDRESS: ${ssm:/${self:provider.stage}/${self:service}/DATABASE_HOST_ADDRESS}
-      DATABASE_NAME: ${ssm:/${self:provider.stage}/${self:service}/DATABASE_NAME}
-      DATABASE_PASSWORD: ${ssm:/${self:provider.stage}/${self:service}/DATABASE_PASSWORD}
-      DATABASE_PORT: ${ssm:/${self:provider.stage}/${self:service}/DATABASE_PORT}
-      DATABASE_USER: ${ssm:/${self:provider.stage}/${self:service}/DATABASE_USER}
-      TABLE_NAME_ROLES: ${ssm:/${self:provider.stage}/${self:service}/TABLE_NAME_ROLES}
+      DATABASE_HOST_ADDRESS: ${ssm:/${self:service}/${self:provider.stage}/DATABASE_HOST_ADDRESS}
+      DATABASE_NAME: ${ssm:/${self:service}/${self:provider.stage}/DATABASE_NAME}
+      DATABASE_PASSWORD: ${ssm:/${self:service}/${self:provider.stage}/DATABASE_PASSWORD}
+      DATABASE_PORT: ${ssm:/${self:service}/${self:provider.stage}/DATABASE_PORT}
+      DATABASE_USER: ${ssm:/${self:service}/${self:provider.stage}/DATABASE_USER}
     events:
       - http:
-          path: cars/{make}/models
-          method: GET
+          path: cars/{make}/models  # Path for fetching car models by make
+          method: GET  # HTTP method
           cors:
-            origin: ${self:provider.environment.ALLOWED_ORIGINS}
-            allowCredentials: true
+            origin: '*'  # Allows all origins for CORS

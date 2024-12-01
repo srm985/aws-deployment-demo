@@ -1,19 +1,29 @@
 {
-  "name": "aws-deployment-demo",
-  "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "author": "Sean McQuay",
+  "dependencies": {
+    "mysql2": "^3.11.4"
   },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
-  "description": "",
+  "description": "This project demonstrates how to deploy a serverless application using AWS, utilizing Lambda functions, an RDS MySQL database, and an S3-hosted front-end. It includes an API to fetch car models by make and a simple front-end to interact with the API.",
   "devDependencies": {
+    "concurrently": "^9.1.0",
+    "eslint": "^8.57.1",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-sort-destructure-keys": "^2.0.0",
     "http-server": "^14.1.1",
     "serverless": "^3.39.0",
-    "serverless-offline": "^14.3.4",
+    "serverless-offline": "^13.8.3",
     "serverless-offline-ssm": "^6.2.0",
     "serverless-prune-plugin": "^2.1.0"
-  }
+  },
+  "license": "MIT",
+  "name": "aws-deployment-demo",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "develop": "concurrently \"npm:serve:backend\" \"npm:serve:frontend\"",
+    "serve:backend": "export NODE_ENV=development && serverless offline --host=0.0.0.0",
+    "serve:frontend": "http-server -o",
+    "start": "npm run develop"
+  },
+  "type": "module",
+  "version": "1.0.0"
 }

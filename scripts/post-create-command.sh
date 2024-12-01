@@ -25,6 +25,13 @@ sudo apt install git-lfs -y
 source ~.bashrc
 source /tmp/.bashrc
 
+# Install AWS CLI
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+unzip /tmp/awscliv2.zip -d /tmp
+cd /tmp
+sudo ./aws/install
+cd /workspaces/aws-deployment-demo
+
 # Install the latest version of NodeJS LTS
 nvm install --lts
 
@@ -51,6 +58,7 @@ sudo mariadb -u root -e "CREATE DATABASE demo;"
 
 echo Provisioning database user...
 
-sudo mariadb -u root -e "CREATE USER 'local'@'localhost' IDENTIFIED BY 'supersecretpw';"
-sudo mariadb -u root -e "GRANT ALL PRIVILEGES ON demo.* TO 'local'@'localhost';"
+sudo mariadb -u root -e "CREATE USER 'admin'@'localhost' IDENTIFIED BY 'supersecretpw';"
+sudo mariadb -u root -e "GRANT ALL PRIVILEGES ON demo.* TO 'admin'@'localhost';"
 sudo mariadb -u root -e "FLUSH PRIVILEGES;"
+sudo mariadb -u root "demo" < "./database.sql"

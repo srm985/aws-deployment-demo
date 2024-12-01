@@ -5,9 +5,73 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
     <title>AWS Deployment Demo</title>
+    <script>
+        // const BASE_URL=`http://localhost:3100/local`
+        const BASE_URL = `https://q19sgf0tre.execute-api.us-east-1.amazonaws.com/local`
+
+        const fetchData = async (url) => {
+            try {
+                const response = await fetch(url);
+
+                return response.json();
+            } catch (error) {
+                console.log(error);
+            }
+
+            return ({});
+        };
+        const checkIsAlive = async () => {
+            const {
+                isAlive = false
+            } = await fetchData(`${BASE_URL}/alive`);
+
+            const statusElement = document.getElementById('status');
+
+            statusElement.innerText = isAlive ? 'alive' : 'dead';
+        };
+
+        const fetchModels = async (event) => {
+            event.preventDefault();
+
+            const searchInput = document.getElementById('search');
+
+            const make = searchInput.value;
+
+            const {
+                modelsList = []
+            } = await fetchData(`${BASE_URL}/cars/${make}/models`);
+
+            const listElement = document.getElementById('list');
+
+            if (!modelsList.length) {
+                return listElement.innerHTML = '<li>No models found...</li>';
+            }
+
+            const listItems = modelsList.map((itemDetails) => `<li>${itemDetails.model}</li>`);
+
+            listElement.innerHTML = listItems.join('');
+        };
+
+        document.addEventListener('load', checkIsAlive());
+
+    </script>
 </head>
 
 <body>
+    <h1>AWS Deployment Demo</h1>
+    <h2>Service online status: <span id="status">unknown</span></h2>
+    <button onclick="checkIsAlive()">Check status</button>
+    <br>
+    <br>
+    <h2>Car search</h2>
+    <form onsubmit="fetchModels(event)">
+        <input type="text"
+               id="search"
+               required>
+        <button type="submit">Search</button>
+    </form>
+    <h3>Models list</h3>
+    <ul id="list"></ul>
 </body>
 
 </html>
